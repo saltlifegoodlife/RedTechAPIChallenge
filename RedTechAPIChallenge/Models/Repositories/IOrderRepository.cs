@@ -1,4 +1,4 @@
-﻿namespace RedTechAPIChallenge.Models.Mappers
+﻿namespace RedTechAPIChallenge.Models.Repositories
 {
     public interface IOrderRepository
     {
@@ -8,6 +8,7 @@
 
         public bool UpdateOrder(Order order, int orderId);
 
+        public List<string> CheckOrder(string[] orderIds);
         public int DeleteOrder(string[] orderIDs);
 
     }

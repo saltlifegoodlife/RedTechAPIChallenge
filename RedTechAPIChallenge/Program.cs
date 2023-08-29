@@ -1,5 +1,5 @@
 using MySql.Data.MySqlClient;
-using RedTechAPIChallenge.Models.Mappers;
+using RedTechAPIChallenge.Models.Repositories;
 using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 
-builder.Services.AddScoped<IDbConnection>((s) =>
+builder.Services.AddTransient<IDbConnection>((s) =>
 {
     IDbConnection conn = new MySqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
     conn.Open();

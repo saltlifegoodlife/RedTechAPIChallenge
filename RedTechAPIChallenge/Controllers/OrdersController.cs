@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.X509;
 using RedTechAPIChallenge.Models;
-using RedTechAPIChallenge.Models.Mappers;
+using RedTechAPIChallenge.Models.Repositories;
 using RedTechAPIChallenge.Views;
 using static RedTechAPIChallenge.Models.Enums;
 
@@ -19,7 +19,7 @@ namespace RedTechAPIChallenge.Controllers
             _orderRepository = orderRepository;
         }
         [HttpGet]
-        
+
         public IEnumerable<Views.Order> Get(string? orderType = null, string? customer = null)
         {
             int? id = null;
@@ -53,7 +53,7 @@ namespace RedTechAPIChallenge.Controllers
         }
 
         [HttpPost]
-        
+
         public NewOrderLogging Insert(OrderInput order)
         {
             NewOrderLogging ol = new NewOrderLogging();
@@ -92,7 +92,7 @@ namespace RedTechAPIChallenge.Controllers
         }
 
         [HttpPut]
-        
+
         public NewOrderLogging Update(OrderInput order)
         {
 
@@ -146,15 +146,44 @@ namespace RedTechAPIChallenge.Controllers
         }
 
         [HttpDelete]
-       
+
         public IActionResult RemoveOrder(string[] orderIDs)
         {
+            List<string> invalidIDs = new List<string>();
+
+            foreach (string orderID in orderIDs)
+            {
+                if (!int.TryParse(orderID, out _))
+                {
+                    invalidIDs.Add(orderID);
+                }
+            }
+
+            if (invalidIDs.Count > 0)
+            {
+                return new BadRequestObjectResult(new
+                {
+                    InvalidOrderIDs = invalidIDs
+                });
+            }
+
+            List<string> notFoundIDs = _orderRepository.CheckOrder(orderIDs);
+
+            if (notFoundIDs.Count > 0)
+            {
+                return new BadRequestObjectResult(new { InvalidOrderIDs = notFoundIDs });
+            }
+
             int result = _orderRepository.DeleteOrder(orderIDs);
+
             if (orderIDs.Length == result)
             {
                 return new NoContentResult();
             }
-            else return new BadRequestResult();
+
+            return new BadRequestResult();
         }
     }
+
+    
 }

@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using System.Data;
 
-namespace RedTechAPIChallenge.Models.Mappers
+namespace RedTechAPIChallenge.Models.Repositories
 {
     public class OrderRepository : IOrderRepository
     {
@@ -22,7 +22,8 @@ namespace RedTechAPIChallenge.Models.Mappers
                 {
                     list.Add("TypeID = @typeID");
                 }
-                if (id != null && customer != null) {
+                if (id != null && customer != null)
+                {
                     list.Add("AND");
                 }
                 if (customer != null)
@@ -31,12 +32,14 @@ namespace RedTechAPIChallenge.Models.Mappers
                 }
             }
             string query = string.Join(" ", list) + ";";
-            return (List<Order>)_connection.Query<Order>(query, new { typeID = id, customer = customer });
+
+            return (List<Order>)_connection.Query<Order>(query, new { typeID = id, customer });
         }
 
         public int InsertOrder(Order order)
         {
             string query = "INSERT INTO orders (`TypeID`, `CustomerName`, `CreatedDate`, `CreatedByUsername`) VALUES (@typeId, @customerName, @createdDate, @createdByUser); SELECT LAST_INSERT_ID();";
+
             return _connection.QuerySingle<int>(query,
                 new { typeId = order.TypeID, customerName = order.CustomerName, createdDate = order.CreatedDate, createdByUser = order.CreatedByUsername });
         }
@@ -58,9 +61,25 @@ namespace RedTechAPIChallenge.Models.Mappers
                 queryArr.Add("CreatedByUsername = @createdByUser");
             }
             var add = string.Join(", ", queryArr);
+
             string query = $"UPDATE orders SET {add} WHERE OrderID = @orderId;";
-            return _connection.Execute(query, new { orderId = orderId, typeId = order.TypeID, customerName = order.CustomerName, createdDate = order.CreatedDate, createdByUser = order.CreatedByUsername }) > 0;
+
+            return _connection.Execute(query, new { orderId, typeId = order.TypeID, customerName = order.CustomerName, createdDate = order.CreatedDate, createdByUser = order.CreatedByUsername }) > 0;
         }
+
+        public List<string> CheckOrder(string[] orderIds) {
+            var bad = new List<string>();
+            foreach (var id in orderIds)
+            {
+                var res = _connection.Execute("SELECT COUNT(*) FROM Orders WHERE OrderID = @OrderId;", new { OrderId = id }) == 0;
+                if (!res)
+                {
+                    bad.Add(id);
+                }
+            }
+            return bad;
+        }
+
         public int DeleteOrder(string[] orderIDs)
         {
             int result = 0;
